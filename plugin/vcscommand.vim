@@ -796,13 +796,17 @@ function! s:VCSCommit(bang, message)
 		endif
 
 		call s:EditFile('commitlog', originalBuffer, '')
-		setlocal ft=vcscommit
+                if vcsType == 'git'
+                    setlocal ft=gitcommit
+                else
+		    setlocal ft=vcscommit
+                endif
 
 		" Create a commit mapping.
 
 		nnoremap <silent> <buffer> <Plug>VCSCommit :call <SID>VCSFinishCommitWithBuffer()<CR>
 
-		silent 0put ='VCS: ----------------------------------------------------------------------'
+		silent put ='VCS: ----------------------------------------------------------------------'
 		silent put ='VCS: Please enter log message.  Lines beginning with ''VCS:'' are removed automatically.'
 		silent put ='VCS: To finish the commit, Type <leader>cc (or your own <Plug>VCSCommit mapping)'
 
@@ -813,7 +817,9 @@ function! s:VCSCommit(bang, message)
 		endif
 
 		silent put ='VCS: ----------------------------------------------------------------------'
-		$
+
+                silent 0put = ''
+
 		setlocal nomodified
 		silent do VCSCommand User VCSBufferCreated
 	catch
