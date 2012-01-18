@@ -660,6 +660,7 @@ function! s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText)
 
 	setlocal buftype=nofile
 	setlocal noswapfile
+        setlocal hidden
 	let &filetype = tolower(a:vcsType . a:command)
 
 	if VCSCommandGetOption('VCSCommandDeleteOnHide', 0)
@@ -884,17 +885,13 @@ function! s:VCSCommit(bang, message)
 		endif
 
 		call s:EditFile('commitlog', originalBuffer, '')
-                if vcsType == 'git'
-                    setlocal ft=gitcommit
-                else
-		    setlocal ft=vcscommit
-                endif
+		setlocal ft=vcscommit
 
 		" Create a commit mapping.
 
 		nnoremap <silent> <buffer> <Plug>VCSCommit :call <SID>VCSFinishCommitWithBuffer()<CR>
 
-		silent put ='VCS: ----------------------------------------------------------------------'
+		silent 0put ='VCS: ----------------------------------------------------------------------'
 		silent put ='VCS: Please enter log message.  Lines beginning with ''VCS:'' are removed automatically.'
 		silent put ='VCS: To finish the commit, Type <leader>cc (or your own <Plug>VCSCommit mapping)'
 
@@ -905,9 +902,7 @@ function! s:VCSCommit(bang, message)
 		endif
 
 		silent put ='VCS: ----------------------------------------------------------------------'
-
-                silent 0put = ''
-
+		$
 		setlocal nomodified
 		silent do VCSCommand User VCSBufferCreated
 	catch
@@ -1292,6 +1287,10 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 
 	silent 0put=output
 
+        " Echo the output, as we will immediately delete the scratch window
+        echo "\n"
+        echo output
+
 	" The last command left a blank line at the end of the buffer.  If the
 	" last line is folded (a side effect of the 'put') then the attempt to
 	" remove the blank line will kill the last fold.
@@ -1309,7 +1308,9 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 	" Define the environment and execute user-defined hooks.
 
 	silent do VCSCommand User VCSBufferCreated
-	return bufnr('%')
+        " Delete the scratch window
+        silent bw!
+        return bufnr('%')
 endfunction
 
 " Function: VCSCommandGetOption(name, default) {{{2
