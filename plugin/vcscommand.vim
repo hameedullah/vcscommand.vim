@@ -1288,8 +1288,12 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 	silent 0put=output
 
         " Echo the output, as we will immediately delete the scratch window
-        echo "\n"
-        echo output
+        " only if the command is add or commit
+        " the output will only be echoed for add, commit and delete commands
+        if a:cmdName == 'add' || a:cmdName == 'commit' || a:cmdName == 'delete'
+            echo "\n"
+            echo output
+        endif
 
 	" The last command left a blank line at the end of the buffer.  If the
 	" last line is folded (a side effect of the 'put') then the attempt to
@@ -1308,8 +1312,11 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 	" Define the environment and execute user-defined hooks.
 
 	silent do VCSCommand User VCSBufferCreated
-        " Delete the scratch window
-        silent bw!
+        " Only wipe the buffer on add, delete and commit buffers
+        if a:cmdName == 'add' || a:cmdName == 'commit' || a:cmdName == 'delete'
+            " Delete the scratch window
+            silent bw!
+        endif
         return bufnr('%')
 endfunction
 
